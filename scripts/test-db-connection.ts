@@ -58,11 +58,12 @@ async function testConnection() {
     const testEmail = `test-${Date.now()}@example.com`;
     const { data: newUser, error: insertError } = await supabase
       .from('users')
-      .insert({ email: testEmail })
+      .insert({ email: testEmail } as any)
       .select()
       .single();
 
     if (insertError) throw insertError;
+    if (!newUser) throw new Error('No user created');
 
     console.log(`✅ Created test user: ${testEmail}`);
 
@@ -70,7 +71,7 @@ async function testConnection() {
     const { error: deleteError } = await supabase
       .from('users')
       .delete()
-      .eq('id', newUser.id);
+      .eq('id', (newUser as any).id);
 
     if (deleteError) throw deleteError;
     console.log('✅ Deleted test user\n');

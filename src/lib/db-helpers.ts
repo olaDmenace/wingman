@@ -7,6 +7,9 @@
 import { supabaseAdmin } from './supabase';
 import type { Database } from './database.types';
 
+// Workaround for TypeScript strict mode with Supabase types
+const db = supabaseAdmin as any;
+
 type Tables = Database['public']['Tables'];
 type User = Tables['users']['Row'];
 type FlightSearch = Tables['flight_searches']['Row'];
@@ -23,7 +26,7 @@ type Conversation = Tables['conversations']['Row'];
 export async function getOrCreateUser(email: string): Promise<User | null> {
   try {
     // Try to find existing user
-    const { data: existingUser, error: findError } = await supabaseAdmin
+    const { data: existingUser, error: findError } = await db
       .from('users')
       .select('*')
       .eq('email', email)
@@ -34,7 +37,7 @@ export async function getOrCreateUser(email: string): Promise<User | null> {
     }
 
     // Create new user if not found
-    const { data: newUser, error: createError } = await supabaseAdmin
+    const { data: newUser, error: createError } = await db
       .from('users')
       .insert({ email })
       .select()
@@ -57,7 +60,7 @@ export async function getOrCreateUser(email: string): Promise<User | null> {
  */
 export async function getUserById(userId: string): Promise<User | null> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from('users')
       .select('*')
       .eq('id', userId)
@@ -98,7 +101,7 @@ export async function saveFlightSearch(
   }
 ): Promise<FlightSearch | null> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from('flight_searches')
       .insert({
         user_id: searchParams.userId || null,
@@ -136,7 +139,7 @@ export async function getUserFlightSearches(
   limit: number = 10
 ): Promise<FlightSearch[]> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from('flight_searches')
       .select('*')
       .eq('user_id', userId)
@@ -178,7 +181,7 @@ export async function createPriceAlert(
   }
 ): Promise<PriceAlert | null> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from('price_alerts')
       .insert({
         user_id: alertData.userId || null,
@@ -214,7 +217,7 @@ export async function createPriceAlert(
  */
 export async function getActivePriceAlerts(): Promise<PriceAlert[]> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from('price_alerts')
       .select('*')
       .eq('active', true)
@@ -240,7 +243,7 @@ export async function getUserPriceAlerts(
   activeOnly: boolean = true
 ): Promise<PriceAlert[]> {
   try {
-    let query = supabaseAdmin
+    let query = db
       .from('price_alerts')
       .select('*')
       .eq('user_id', userId);
@@ -275,7 +278,7 @@ export async function updatePriceAlert(
   }
 ): Promise<boolean> {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await db
       .from('price_alerts')
       .update({
         last_known_price: updates.lastKnownPrice,
@@ -321,7 +324,7 @@ export async function saveConversation(
   try {
     if (conversationData.conversationId) {
       // Update existing conversation
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await db
         .from('conversations')
         .update({
           messages: conversationData.messages,
@@ -339,7 +342,7 @@ export async function saveConversation(
       return data;
     } else {
       // Create new conversation
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await db
         .from('conversations')
         .insert({
           user_id: conversationData.userId || null,
@@ -369,7 +372,7 @@ export async function getConversation(
   conversationId: string
 ): Promise<Conversation | null> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from('conversations')
       .select('*')
       .eq('id', conversationId)
@@ -395,7 +398,7 @@ export async function getUserConversations(
   limit: number = 20
 ): Promise<Conversation[]> {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from('conversations')
       .select('*')
       .eq('user_id', userId)
@@ -429,7 +432,7 @@ export async function trackOutboundClick(
   }
 ): Promise<boolean> {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await db
       .from('outbound_clicks')
       .insert({
         user_id: clickData.userId || null,
@@ -454,7 +457,7 @@ export async function trackOutboundClick(
  */
 export async function getUserClickAnalytics(userId: string) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await db
       .from('outbound_clicks')
       .select('*')
       .eq('user_id', userId)

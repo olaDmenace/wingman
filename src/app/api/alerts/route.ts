@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Workaround for TypeScript strict mode with Supabase types
+const db = supabaseAdmin as any;
+
 export async function POST(request: NextRequest) {
   try {
     const { flightId, messages, email } = await request.json();
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Create or get user
     let userId: string | null = null;
-    const { data: existingUser } = await supabaseAdmin
+    const { data: existingUser } = await db
       .from('users')
       .select('id')
       .eq('email', email)
@@ -44,7 +47,7 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       userId = existingUser.id;
     } else {
-      const { data: newUser, error: userError } = await supabaseAdmin
+      const { data: newUser, error: userError } = await db
         .from('users')
         .insert({ email })
         .select('id')
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
       active: true,
     };
 
-    const { error: alertError } = await supabaseAdmin
+    const { error: alertError } = await db
       .from('price_alerts')
       .insert(alertData);
 
@@ -113,7 +116,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's active alerts
-    const { data: user } = await supabaseAdmin
+    const { data: user } = await db
       .from('users')
       .select('id')
       .eq('email', email)
@@ -123,7 +126,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ alerts: [] });
     }
 
-    const { data: alerts, error } = await supabaseAdmin
+    const { data: alerts, error } = await db
       .from('price_alerts')
       .select('*')
       .eq('user_id', user.id)
@@ -160,7 +163,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await supabaseAdmin
+    const { error } = await db
       .from('price_alerts')
       .update({ active: false })
       .eq('id', alertId);

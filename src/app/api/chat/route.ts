@@ -4,6 +4,9 @@ import { searchFlights } from '@/lib/flight-api';
 import { ConversationContext, Message, FlightSearchParams } from '@/types';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Workaround for TypeScript strict mode with Supabase types
+const db = supabaseAdmin as any;
+
 export async function POST(request: NextRequest) {
   try {
     const { messages, userId, conversationId } = await request.json();
@@ -48,17 +51,22 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Build search parameters
+      // Build search parameters (convert null to undefined for TypeScript)
       const searchParams: FlightSearchParams = {
         origin: intent.origin!,
         destination: intent.destination!,
-        departureDate: intent.departureDate,
-        departureDateRangeStart: intent.departureDateRangeStart,
-        departureDateRangeEnd: intent.departureDateRangeEnd,
-        returnDate: intent.returnDate,
+        departureDate: intent.departureDate || undefined,
+        departureDateRangeStart: intent.departureDateRangeStart || undefined,
+        departureDateRangeEnd: intent.departureDateRangeEnd || undefined,
+        returnDate: intent.returnDate || undefined,
         passengerCount: intent.passengerCount || 1,
         tripType: intent.tripType || 'round-trip',
-        preferences: intent.preferences,
+        preferences: intent.preferences ? {
+          cheapest: intent.preferences.cheapest,
+          fastest: intent.preferences.fastest,
+          flexibleDates: intent.preferences.flexibleDates,
+          maxStops: intent.preferences.maxStops || undefined,
+        } : undefined,
       };
 
       // Search for flights
@@ -66,7 +74,7 @@ export async function POST(request: NextRequest) {
 
       // Save flight search to database
       try {
-        await supabaseAdmin
+        await db
           .from('flight_searches')
           .insert({
             user_id: userId || null,
@@ -79,7 +87,7 @@ export async function POST(request: NextRequest) {
             trip_type: searchParams.tripType,
             passenger_count: searchParams.passengerCount,
             preferences: searchParams.preferences || null,
-            search_results: flightResults as any,
+            search_results: flightResults,
           });
       } catch (dbError) {
         console.error('Error saving flight search:', dbError);
@@ -113,21 +121,21 @@ export async function POST(request: NextRequest) {
     try {
       if (conversationId) {
         // Update existing conversation
-        await supabaseAdmin
+        await db
           .from('conversations')
           .update({
             messages: messages,
-            context: context as any,
+            context: context,
           })
           .eq('id', conversationId);
       } else {
         // Create new conversation
-        await supabaseAdmin
+        await db
           .from('conversations')
           .insert({
             user_id: userId || null,
             messages: messages,
-            context: context as any,
+            context: context,
           });
       }
     } catch (dbError) {

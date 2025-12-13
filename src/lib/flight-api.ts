@@ -1,4 +1,5 @@
 import { Flight, FlightSearchParams, FlightSearchResult } from '@/types';
+// @ts-ignore - Amadeus doesn't have type definitions
 import Amadeus from 'amadeus';
 
 // Initialize Amadeus client

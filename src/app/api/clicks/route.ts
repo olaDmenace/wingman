@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Workaround for TypeScript strict mode with Supabase types
+const db = supabaseAdmin as any;
+
 export async function POST(request: NextRequest) {
   try {
     const { flightId, bookingUrl, userId } = await request.json();
@@ -13,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Track the outbound click
-    const { error } = await supabaseAdmin
+    const { error } = await db
       .from('outbound_clicks')
       .insert({
         user_id: userId || null,

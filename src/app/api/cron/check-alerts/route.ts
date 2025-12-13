@@ -3,6 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { checkPriceChanges } from '@/lib/flight-api';
 import { sendPriceAlertEmail } from '@/lib/email';
 
+// Workaround for TypeScript strict mode with Supabase types
+const db = supabaseAdmin as any;
+
 // This endpoint should be called periodically by a cron job
 // For example, using Vercel Cron Jobs or a service like cron-job.org
 
@@ -17,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all active price alerts
-    const { data: alerts, error: alertsError } = await supabaseAdmin
+    const { data: alerts, error: alertsError } = await db
       .from('price_alerts')
       .select('*')
       .eq('active', true);
@@ -52,7 +55,7 @@ export async function GET(request: NextRequest) {
         );
 
         // Update the alert with the latest price
-        await supabaseAdmin
+        await db
           .from('price_alerts')
           .update({
             last_known_price: currentPrice,

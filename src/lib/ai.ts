@@ -18,7 +18,7 @@ const FlightSearchSchema = z.object({
     fastest: z.boolean().optional().default(false),
     flexibleDates: z.boolean().optional().default(false),
     maxStops: z.number().optional().nullable(),
-  }).optional().default({}),
+  }).optional().default({ cheapest: false, fastest: false, flexibleDates: false, maxStops: null }),
   missingInfo: z.array(z.string()).optional().default([]).describe('List of missing required information'),
   clarificationQuestion: z.string().optional().nullable().describe('Question to ask user if clarification is needed'),
 });
@@ -71,7 +71,6 @@ Return ONLY valid JSON, no markdown formatting, no explanation.`;
     const { text } = await generateText({
       model: openai('gpt-4o-mini'),
       prompt: `${systemPrompt}\n\nConversation:\n${conversationHistory}\n\nJSON:`,
-      maxTokens: 500,
     });
 
     // Clean up the response - remove markdown code blocks if present
@@ -159,7 +158,6 @@ Current context: ${JSON.stringify(context)}`;
     const { text } = await generateText({
       model: openai('gpt-4o-mini'),
       prompt: `${systemPrompt}\n\nConversation:\n${conversationHistory}\n\nassistant:`,
-      maxTokens: 150,
     });
 
     return text;
