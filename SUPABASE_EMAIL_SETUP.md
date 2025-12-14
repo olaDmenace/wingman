@@ -48,16 +48,41 @@ supabase secrets set RESEND_API_KEY=your_resend_api_key_here
 supabase functions deploy send-email
 ```
 
-### 5. Verify Domain (Optional but Recommended)
+### 5. Choose Your Email Sender Domain
 
-For production use, verify your domain in Resend:
+You have two options for sending emails:
+
+#### Option A: Use Resend's Default Domain (Quick Start - Recommended)
+The edge function is already configured to use `onboarding@resend.dev`:
+- ✅ Works immediately, no setup needed
+- ✅ Perfect for testing and development
+- ⚠️ Limited to 100 emails/day
+- ⚠️ May land in spam for some recipients
+
+**No changes needed!** The default configuration in the edge function already uses this:
+```typescript
+from: 'Wingman Travel <onboarding@resend.dev>'
+```
+
+#### Option B: Verify Your Own Domain (Production Use)
+For better deliverability in production, verify a custom domain:
+
+**Note:** You cannot use your Vercel URL (e.g., `wingman.vercel.app`) because Resend requires DNS access.
+
+**Options for getting a domain:**
+1. **Free domains** from Freenom (.tk, .ml, .ga, .cf, .gq)
+2. **Cheap domains** from Namecheap (.xyz for $1/year)
+3. **Premium domains** from any registrar (.com for ~$10/year)
+
+**Setup steps:**
 1. Go to Resend Dashboard → Domains
-2. Add your domain
-3. Add the required DNS records
-4. Update the edge function `from` field to use your verified domain:
+2. Add your custom domain
+3. Add the required DNS records to your domain provider
+4. Update the edge function `from` field:
    ```typescript
    from: 'Wingman Travel <noreply@yourdomain.com>'
    ```
+5. Re-deploy: `supabase functions deploy send-email`
 
 ## Testing the Email Function
 
