@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkPriceChanges } from '@/lib/flight-api';
-import { sendPriceAlertEmail } from '@/lib/email';
+import { sendPriceAlertEmail } from '@/lib/email-supabase';
 
 // Workaround for TypeScript strict mode with Supabase types
 const db = supabaseAdmin as any;
