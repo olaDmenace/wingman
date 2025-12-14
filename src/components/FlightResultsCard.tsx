@@ -1,4 +1,5 @@
 import { FlightSearchResult } from '@/types';
+import { formatNGN } from '@/lib/currency';
 
 interface FlightResultsCardProps {
   results: FlightSearchResult;
@@ -40,7 +41,7 @@ export function FlightResultsCard({ results, onSetAlert, onBookFlight }: FlightR
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">
-                  {flight.currency}{flight.price}
+                  {formatNGN(flight.price)}
                 </div>
               </div>
             </div>

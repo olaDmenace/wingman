@@ -1,6 +1,7 @@
 import { Flight, FlightSearchParams, FlightSearchResult } from '@/types';
 // @ts-ignore - Amadeus doesn't have type definitions
 import Amadeus from 'amadeus';
+import { convertToNGN } from './currency';
 
 // Initialize Amadeus client
 const amadeus = new Amadeus({
@@ -91,11 +92,16 @@ async function searchAmadeusFlights(params: FlightSearchParams): Promise<Flight[
       const minutes = durationMatch?.[2] ? parseInt(durationMatch[2]) : 0;
       const totalDuration = hours * 60 + minutes;
 
+      // Convert price to NGN for consistent display
+      const originalPrice = parseFloat(offer.price.total);
+      const originalCurrency = offer.price.currency;
+      const priceInNGN = convertToNGN(originalPrice, originalCurrency);
+
       return {
         id: offer.id || `amadeus-${index}-${Date.now()}`,
         airline: firstSegment.carrierCode,
-        price: parseFloat(offer.price.total),
-        currency: offer.price.currency,
+        price: priceInNGN,
+        currency: 'NGN',
         duration: totalDuration,
         stops: offer.itineraries[0].segments.length - 1,
         departureTime: firstSegment.departure.at,
@@ -216,9 +222,33 @@ function normalizeLocationFallback(location: string): string {
   return AIRPORTS[normalized] || normalized.toUpperCase().slice(0, 3);
 }
 
+function isNigerianRoute(origin: string, destination: string): boolean {
+  const nigerianCities = [
+    'lagos', 'abuja', 'port harcourt', 'portharcourt', 'kano', 'enugu',
+    'calabar', 'jos', 'maiduguri', 'kaduna', 'sokoto', 'ibadan', 'ilorin',
+    'benin city', 'benin', 'warri', 'akure', 'asaba', 'owerri', 'yola',
+    'makurdi', 'minna', 'uyo', 'bauchi', 'gombe', 'jalingo',
+    'LOS', 'ABV', 'PHC', 'KAN', 'ENU', 'CBQ', 'JOS', 'MIU', 'KAD', 'SKO',
+    'IBA', 'ILR', 'BNI', 'QRW', 'AKR', 'ABB', 'QOW', 'YOL', 'MDI', 'MXJ',
+    'QUO', 'BCU', 'GMO', 'JLO'
+  ];
+
+  const originNormalized = origin.toLowerCase().trim();
+  const destNormalized = destination.toLowerCase().trim();
+
+  return nigerianCities.includes(originNormalized) && nigerianCities.includes(destNormalized);
+}
+
 function generateMockFlights(params: FlightSearchParams): Flight[] {
   const flights: Flight[] = [];
-  const basePrice = 300 + Math.random() * 700;
+
+  // Realistic Nigerian domestic flight prices: ₦50,000 - ₦150,000
+  // International flights: ₦300,000 - ₦2,000,000
+  const isInternational = !isNigerianRoute(params.origin, params.destination);
+  const basePrice = isInternational
+    ? 300000 + Math.random() * 700000  // ₦300k - ₦1M base for international
+    : 50000 + Math.random() * 100000;   // ₦50k - ₦150k base for domestic
+
   const numFlights = 8;
 
   for (let i = 0; i < numFlights; i++) {
@@ -236,7 +266,7 @@ function generateMockFlights(params: FlightSearchParams): Flight[] {
       id: `flight-${i + 1}-${Date.now()}`,
       airline: AIRLINES[Math.floor(Math.random() * AIRLINES.length)],
       price,
-      currency: 'USD',
+      currency: 'NGN',
       duration,
       stops,
       departureTime: departureTime.toISOString(),
@@ -292,10 +322,12 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightS
 }
 
 export async function getFlightPrice(flightId: string): Promise<number> {
-  // For now, return a mock price
-  // In production, you might want to re-query Amadeus for updated prices
+  // Return realistic NGN price
+  // Domestic: ₦50,000 - ₦150,000
+  // International: ₦300,000 - ₦1,000,000
   await new Promise((resolve) => setTimeout(resolve, 500));
-  return Math.round(300 + Math.random() * 700);
+  const basePrice = 50000 + Math.random() * 100000; // Domestic flight price
+  return Math.round(basePrice);
 }
 
 export function normalizeLocation(location: string): string {
