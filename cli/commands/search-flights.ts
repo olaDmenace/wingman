@@ -46,7 +46,8 @@ export async function searchFlightsCommand(options: SearchOptions) {
     };
 
     // Search flights
-    const flights = await searchFlights(searchParams);
+    const result = await searchFlights(searchParams);
+    const flights = result.flights;
 
     spinner.succeed(`Found ${flights.length} flights`);
 
@@ -63,7 +64,7 @@ export async function searchFlightsCommand(options: SearchOptions) {
       console.log(`   Route: ${flight.origin} → ${flight.destination}`);
       console.log(`   Departure: ${new Date(flight.departureTime).toLocaleString()}`);
       console.log(`   Arrival: ${new Date(flight.arrivalTime).toLocaleString()}`);
-      console.log(`   Duration: ${flight.duration}`);
+      console.log(`   Duration: ${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m`);
       console.log(`   Stops: ${flight.stops}`);
       console.log(chalk.green.bold(`   Price: ₦${flight.price.toLocaleString()}`));
       console.log('');
