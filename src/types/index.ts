@@ -33,6 +33,7 @@ export interface Flight {
   origin: string;
   destination: string;
   bookingUrl?: string;
+  flightNumber?: string; // Real flight number from AviationStack
 }
 
 export interface FlightSearchResult {
